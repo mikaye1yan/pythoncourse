@@ -1,65 +1,75 @@
 import random
 
-class TicTacToe:
+
+class Board:
     def __init__(self):
-        self.gameboard = [[' ' for _ in range(3)] for _ in range(3)]
-        self.players = ['X', 'O']
-        random.shuffle(self.players)
-        self.current_player = self.players[0]
-
-    def print_gameboard(self):
-        for row in self.gameboard:
-            print(' | '.join(row))
-            print('-' * 9)
-
-    def winner_check(self, player):
-        for row in self.gameboard:
-            if row.count(player) == 3:
+        self.board = [' ' for _ in range(9)]
+    def print_board(self):
+        for i in range(3):
+            print(' | '.join(self.board[i*3:i*3+3]))
+            if i < 2:
+                print('-' * 9)
+    def make_move(self, position, symbol):
+        self.board[position] = symbol
+    def is_valid_move(self, position):
+        return self.board[position] == ' '
+    def check_win(self, symbol):
+        win_conditions = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]]
+        for condition in win_conditions:
+            if all(self.board[pos] == symbol for pos in condition):
                 return True
-        for col in range(3):
-            if all(self.gameboard[row][col] == player for row in range(3)):
-                return True
-        if all(self.gameboard[i][i] == player for i in range(3)) or all(self.gameboard[i][2 - i] == player for i in range(3)):
-            return True
         return False
+    def check_draw(self):
+        return ' ' not in self.board
+class Player:
+    def __init__(self, symbol):
+        self.symbol = symbol
+    def __str__(self):
+        return f"Player {self.symbol}"
+class HumanPlayer(Player):
+    def get_move(self):
+        while True:
+            try:
+                move = int(input("Please enter your move (1-9): ")) - 1
+                if 0 <= move <= 8:
+                    return move
+                else:
+                    print("Invalid move, please enter a number between 1 and 9.")
+            except ValueError:
+                print("Invalid input, please try again.")
 
+class ComputerPlayer(Player):
+    def get_move(self, board):
+        available_moves = [i for i, val in enumerate(board.board) if val == ' ']
+        return random.choice(available_moves)
+class TicTacToeGame:
+    def __init__(self, player1, player2):
+        self.board = Board()
+        self.players = [player1, player2]
+        self.current_player = random.choice(self.players)
+    def switch_player(self):
+        self.current_player = self.players[0] if self.current_player == self.players[1] else self.players[1]
     def play(self):
-        print('Start game')
-        self.print_gameboard()
-
-        for _ in range(9):
-            while True:
-                row = int(input('Enter row (0, 1, 2): '))
-                col = int(input('Enter column (0, 1, 2): '))
-                if self.gameboard[row][col] == ' ':
+        print("Let's start the game!")
+        while True:
+            self.board.print_board()
+            print(f"It's {self.current_player}'s turn.")
+            move = self.current_player.get_move() if isinstance(self.current_player, HumanPlayer) else self.current_player.get_move(self.board)
+            if self.board.is_valid_move(move):
+                self.board.make_move(move, self.current_player.symbol)
+                if self.board.check_win(self.current_player.symbol):
+                    self.board.print_board()
+                    print(f"{self.current_player} wins!")
                     break
-                print('Cell is taken, try again')
-
-            self.gameboard[row][col] = self.current_player
-            self.print_gameboard()
-
-            if self.winner_check(self.current_player):
-                print('You win.')
-                return
-
-            while True:
-                rival_row = random.randint(0, 2)
-                rival_col = random.randint(0, 2)
-                if self.gameboard[rival_row][rival_col] == ' ':
+                elif self.board.check_draw():
+                    self.board.print_board()
+                    print("It's a draw!")
                     break
-
-            self.gameboard[rival_row][rival_col] = 'O'
-            print("Rival player's move: ")
-            self.print_gameboard()
-
-            if self.winner_check('O'):
-                print('You lost')
-                return
-
-        if all(cell != ' ' for row in self.gameboard for cell in row) and not self.winner_check('X') and not self.winner_check('O'):
-            print('Draw')
-        else:
-            print('No one wins')
-
-game = TicTacToe()
+                else:
+                    self.switch_player()
+            else:
+                print("Invalid move, try again.")   
+player1 = HumanPlayer('X')
+player2 = ComputerPlayer('O')
+game = TicTacToeGame(player1, player2)
 game.play()
