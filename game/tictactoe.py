@@ -37,7 +37,6 @@ class HumanPlayer(Player):
                     print("Invalid move, please enter a number between 1 and 9.")
             except ValueError:
                 print("Invalid input, please try again.")
-
 class ComputerPlayer(Player):
     def get_move(self, board):
         available_moves = [i for i, val in enumerate(board.board) if val == ' ']
